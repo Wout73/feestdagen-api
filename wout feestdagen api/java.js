@@ -1,0 +1,56 @@
+  const today = new Date();
+        const year = today.getFullYear();
+
+        fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/NL`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                return response.json();
+            })
+            .then(data => {
+
+                // Filter the upcoming holidays
+                const upcomingHolidays = data.filter(holiday => {
+                    return new Date(holiday.date) >= today;
+                });
+
+                // Sorteer op datum
+                upcomingHolidays.sort((a, b) =>
+                    new Date(a.date) - new Date(b.date)
+                );
+
+                const container = document.getElementById("feestdagen");
+
+                // Check if there are any upcoming holidays this year
+                if (upcomingHolidays.length === 0) {
+                    container.innerHTML = "Geen feestdagen meer dit jaar.";
+                    return;
+                }
+
+                const nextThree = upcomingHolidays.slice(0, 3);
+
+                container.innerHTML = "";
+
+                // format the date in a readable format
+                nextThree.forEach(h => {
+                    const datum = new Date(h.date).toLocaleDateString("nl-NL", {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric"
+                    });
+
+                    container.innerHTML += `
+                        <div class="feestdag">
+                            <strong>${h.localName}</strong><br>
+                            <small>${datum}</small>
+                        </div>
+                    `;
+                });
+            })
+            .catch(error => {
+                document.getElementById("feestdagen").innerHTML =
+                    "Kon feestdagen niet laden.";
+                console.error("Fout bij ophalen:", error);
+            });
